@@ -31374,8 +31374,7 @@
 	    'div',
 	    { id: 'main' },
 	    _react2.default.createElement(_Navbar2.default, null),
-	    children,
-	    _react2.default.createElement(_Footer2.default, null)
+	    children
 	  );
 	};
 
@@ -31401,7 +31400,7 @@
 	    null,
 	    _react2.default.createElement(
 	      "div",
-	      { className: "nav-wrapper" },
+	      { className: "nav-wrapper light-blue lighten-1" },
 	      _react2.default.createElement(
 	        "a",
 	        { href: "#", className: "brand-logo" },
