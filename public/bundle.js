@@ -31372,7 +31372,7 @@
 	  var children = _ref.children;
 	  return _react2.default.createElement(
 	    'div',
-	    { id: 'main', className: 'container-fluid' },
+	    { id: 'main' },
 	    _react2.default.createElement(_Navbar2.default, null),
 	    children,
 	    _react2.default.createElement(_Footer2.default, null)
@@ -31386,7 +31386,7 @@
 	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 	
 	var _react = __webpack_require__(59);
@@ -31396,15 +31396,50 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = function () {
-		return _react2.default.createElement(
-			"div",
-			{ className: "container" },
-			_react2.default.createElement(
-				"h1",
-				null,
-				"I am a Navbar"
-			)
-		);
+	  return _react2.default.createElement(
+	    "nav",
+	    null,
+	    _react2.default.createElement(
+	      "div",
+	      { className: "nav-wrapper" },
+	      _react2.default.createElement(
+	        "a",
+	        { href: "#", className: "brand-logo" },
+	        "Logo"
+	      ),
+	      _react2.default.createElement(
+	        "ul",
+	        { id: "nav-mobile", className: "right hide-on-med-and-down" },
+	        _react2.default.createElement(
+	          "li",
+	          null,
+	          _react2.default.createElement(
+	            "a",
+	            { href: "sass.html" },
+	            "Sass"
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "li",
+	          null,
+	          _react2.default.createElement(
+	            "a",
+	            { href: "badges.html" },
+	            "Components"
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "li",
+	          null,
+	          _react2.default.createElement(
+	            "a",
+	            { href: "collapsible.html" },
+	            "JavaScript"
+	          )
+	        )
+	      )
+	    )
+	  );
 	};
 
 /***/ },
@@ -31414,7 +31449,7 @@
 	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	  value: true
 	});
 	
 	var _react = __webpack_require__(59);
@@ -31424,15 +31459,95 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = function () {
-		return _react2.default.createElement(
-			"div",
-			{ className: "container" },
-			_react2.default.createElement(
-				"h1",
-				null,
-				"I am a footer"
-			)
-		);
+	  return _react2.default.createElement(
+	    "footer",
+	    { className: "page-footer" },
+	    _react2.default.createElement(
+	      "div",
+	      { className: "container" },
+	      _react2.default.createElement(
+	        "div",
+	        { className: "row" },
+	        _react2.default.createElement(
+	          "div",
+	          { className: "col l6 s12" },
+	          _react2.default.createElement(
+	            "h5",
+	            { className: "white-text" },
+	            "Footer Content"
+	          ),
+	          _react2.default.createElement(
+	            "p",
+	            { className: "grey-text text-lighten-4" },
+	            "You can use rows and columns here to organize your footer content."
+	          )
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { className: "col l4 offset-l2 s12" },
+	          _react2.default.createElement(
+	            "h5",
+	            { className: "white-text" },
+	            "Links"
+	          ),
+	          _react2.default.createElement(
+	            "ul",
+	            null,
+	            _react2.default.createElement(
+	              "li",
+	              null,
+	              _react2.default.createElement(
+	                "a",
+	                { className: "grey-text text-lighten-3", href: "#!" },
+	                "Link 1"
+	              )
+	            ),
+	            _react2.default.createElement(
+	              "li",
+	              null,
+	              _react2.default.createElement(
+	                "a",
+	                { className: "grey-text text-lighten-3", href: "#!" },
+	                "Link 2"
+	              )
+	            ),
+	            _react2.default.createElement(
+	              "li",
+	              null,
+	              _react2.default.createElement(
+	                "a",
+	                { className: "grey-text text-lighten-3", href: "#!" },
+	                "Link 3"
+	              )
+	            ),
+	            _react2.default.createElement(
+	              "li",
+	              null,
+	              _react2.default.createElement(
+	                "a",
+	                { className: "grey-text text-lighten-3", href: "#!" },
+	                "Link 4"
+	              )
+	            )
+	          )
+	        )
+	      )
+	    ),
+	    _react2.default.createElement(
+	      "div",
+	      { className: "footer-copyright" },
+	      _react2.default.createElement(
+	        "div",
+	        { className: "container" },
+	        "\xA9 2017 Copyright Evan DiGiambattista",
+	        _react2.default.createElement(
+	          "a",
+	          { className: "grey-text text-lighten-4 right", href: "#!" },
+	          "More Links"
+	        )
+	      )
+	    )
+	  );
 	};
 
 /***/ },

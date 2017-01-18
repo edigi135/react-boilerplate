@@ -5,7 +5,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 
 export default ({ children }) => (
-  <div id="main" className="container-fluid">
+  <div id="main">
     <Navbar />
     { children }
     <Footer />
