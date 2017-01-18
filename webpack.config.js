@@ -3,13 +3,16 @@
 const webpack = require('webpack');
 
 module.exports = {
-  entry: './browser/main.js',
+  entry: './browser/main.jsx',
   output: {
     path: __dirname,
     filename: './public/bundle.js'
   },
   context: __dirname,
   devtool: 'source-map',  
+  resolve: {
+    extensions: ['', '.js', '.jsx']
+  },
   module: {
     loaders: [
       {

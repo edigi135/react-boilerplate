@@ -3,5 +3,6 @@
 import { combineReducers } from 'redux';
 
 // import reducers here --->
+import sampleReducer from './reducer_Sample-Reducer';
 
-export default combineReducers({ /*list reducers here, separated by comma*/ });
+export default combineReducers({ sampleReducer });
