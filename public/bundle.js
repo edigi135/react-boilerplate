@@ -31400,7 +31400,7 @@
 	    null,
 	    _react2.default.createElement(
 	      "div",
-	      { className: "nav-wrapper light-blue lighten-1" },
+	      { className: "nav-wrapper green darken-2" },
 	      _react2.default.createElement(
 	        "a",
 	        { href: "#", className: "brand-logo" },
