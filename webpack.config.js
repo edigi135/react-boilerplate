@@ -29,7 +29,7 @@ module.exports = {
       },
       {
         test: /\.json$/,
-        include: path.join(__dirname, 'node_modules', 'pixi.js'),
+        include: path.join(__dirname, 'node_modules', 'chord-dictionary'),
         loader: 'json',
       },
     ]

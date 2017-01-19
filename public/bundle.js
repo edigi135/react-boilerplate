@@ -31453,6 +31453,10 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _Canvas = __webpack_require__(342);
+	
+	var _Canvas2 = _interopRequireDefault(_Canvas);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	exports.default = function () {
@@ -31463,9 +31467,1594 @@
 				'p',
 				null,
 				'content'
-			)
+			),
+			_react2.default.createElement(_Canvas2.default, null)
 		);
 	};
+
+/***/ },
+/* 309 */,
+/* 310 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var slice = Array.prototype.slice
+	var modules = [
+	  __webpack_require__(311),
+	  __webpack_require__(312),
+	  __webpack_require__(327),
+	  __webpack_require__(328),
+	  __webpack_require__(329),
+	  __webpack_require__(330),
+	  __webpack_require__(331),
+	  __webpack_require__(335),
+	  __webpack_require__(336)
+	]
+	
+	function score (data) {
+	  if (arguments.length > 1) data = score.sim(slice.call(arguments))
+	  return score.build(score, data).score
+	}
+	
+	modules.forEach(function (module) {
+	  Object.keys(module).forEach(function (name) { score[name] = module[name] })
+	})
+	
+	if (typeof module === 'object' && module.exports) module.exports = score
+	if (typeof window !== 'undefined') window.Score = score
+
+
+/***/ },
+/* 311 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	/**
+	 * @module score
+	 */
+	var isArray = Array.isArray
+	var slice = Array.prototype.slice
+	var assign = Object.assign
+	function typeOf (obj) { return isArray(obj) ? obj[0] : 'el' }
+	function isStruct (e) { return isArray(e) && typeof e[0] === 'string' }
+	// create a sequence builder
+	function builder (name) {
+	  return function (elements) {
+	    if (arguments.length > 1) return [name].concat(slice.call(arguments))
+	    else if (isStruct(elements)) return [name, elements]
+	    return [name].concat(elements)
+	  }
+	}
+	
+	/**
+	 * Create a score element: an object with duration
+	 *
+	 * It's accepts any data you supply, but duration property has a special
+	 * meaning: it's a number representing the duration in arbitrary units.
+	 * It's assumed to be 0 (no duration) if not present or not a valid number
+	 *
+	 * @param {Number} duration - the element duration
+	 * @param {Object} data - the additional element data
+	 */
+	function el (d, data) {
+	  if (typeof d === 'object') return assign({}, d, data)
+	  else return assign({ duration: +d || 0 }, data)
+	}
+	
+	/**
+	 * Create a note from duration and pitch
+	 *
+	 * A note is any object with duration and pitch attributes. The duration
+	 * must be a number, but the pitch can be any value (although only strings with
+	 * scientific notation pitches and midi numbers are recogniced by the manipulation
+	 * or display functions)
+	 *
+	 * If only duration is provided, a partially applied function is returned.
+	 *
+	 * @param {Integer} duration - the note duration
+	 * @param {String|Integer} pitch - the note pitch
+	 * @param {Hash} data - (Optional) arbitraty note data
+	 * @return {Hash} a note
+	 *
+	 * @example
+	 * score.note(1, 'A') // => { duration: 1, pitch: 'A' }
+	 * score.note(0.5, 'anything') // => { duration: 0.5, pitch: 'anything' }
+	 * score.note(2, 'A', 2, { inst: 'piano' }) // => { duration: 2, pitch: 'A', inst: 'piano' }
+	 *
+	 * @example
+	 * // partially applied
+	 * ['C', 'D', 'E'].map(score.note(1)) // => [{ duration: 1, pitch: 'C'},
+	 *   { duration: 1, pitch: 'D'}, { duration: 1, pitch: 'E'}]
+	 */
+	function note (dur, pitch, data) {
+	  if (arguments.length === 1) return function (p, d) { return note(dur, p, d) }
+	  return assign({ pitch: pitch, duration: dur || 1 }, data)
+	}
+	
+	/**
+	 * Create a musical structure where elements are sequenetial
+	 *
+	 * @function
+	 * @param {Array} elements - an array of elements
+	 * @return {Array} the sequential musical structure
+	 *
+	 * @example
+	 * score.sequential([score.note('A'), score.note('B')])
+	 */
+	var seq = builder('seq')
+	
+	/**
+	 * Create a musical structure where elements are simultaneous
+	 *
+	 * @function
+	 * @example
+	 * score.sim([score.note('A'), score.note('B')])
+	 */
+	var sim = builder('sim')
+	
+	/**
+	 * Transform a musical structure
+	 *
+	 * This is probably the most important function. It allows complex
+	 * transformations of musical structures using three functions
+	 *
+	 * @param {Function} elTransform - element transform function
+	 * @param {Function} seqTransform - sequential structure transform function
+	 * @param {Function} parTransform - simultaneous structure transform function
+	 * @param {*} ctx - an additional object passed to transform functions
+	 * @param {Object} score - the score to transform
+	 * @return {*} the result of the transformation
+	 */
+	function transform (nt, st, pt, ctx, obj) {
+	  switch (arguments.length) {
+	    case 0: return transform
+	    case 1:
+	    case 2:
+	    case 3: return transformer(nt, st, pt)
+	    case 4: return function (o) { return transformer(nt, st, pt)(ctx, o) }
+	    default: return transformer(nt, st, pt)(ctx, obj)
+	  }
+	}
+	
+	function transformer (nt, st, pt) {
+	  var T = function (ctx, obj) {
+	    var m = function (o) { return T(ctx, o) }
+	    switch (typeOf(obj)) {
+	      case 'el': return nt(obj, ctx)
+	      case 'seq': return st(obj.slice(1).map(m), ctx)
+	      case 'sim': return pt(obj.slice(1).map(m), ctx)
+	      default: return obj
+	    }
+	  }
+	  return T
+	}
+	
+	/**
+	* Map the notes of a musical structure using a function
+	*
+	* @param {Function} fn - the function used to map the notes
+	* @param {Object} ctx - a context object passed to the function
+	* @param {Score} score - the score to transform
+	* @return {Score} the transformed score
+	*/
+	function map (fn, ctx, obj) {
+	  switch (arguments.length) {
+	    case 0: return map
+	    case 1: return transform(fn, buildSeq, buildSim)
+	    case 2: return function (obj) { return map(fn)(ctx, obj) }
+	    case 3: return map(fn)(ctx, obj)
+	  }
+	}
+	function buildSeq (el, ctx) { return seq(el) }
+	function buildSim (el, ctx) { return sim(el) }
+	
+	module.exports = {
+	  el: el, note: note,
+	  seq: seq, sequentially: seq,
+	  sim: sim, simultaneosly: sim,
+	  transform: transform, map: map }
+
+
+/***/ },
+/* 312 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module notes */
+	
+	var score = __webpack_require__(311)
+	var tr = __webpack_require__(313)
+	
+	// ======== UTILITY ========
+	// This is an utility function to create array of notes quickly.
+	function notes (pitches, durations, params) {
+	  var p = toArray(pitches || null)
+	  var d = toArray(durations || 1)
+	  return p.map(function (pitch, i) {
+	    return score.note(+d[i % d.length], pitch, params)
+	  })
+	}
+	
+	// convert anything to an array (if string, split it)
+	function toArray (obj) {
+	  if (Array.isArray(obj)) return obj
+	  else if (typeof obj === 'string') return obj.trim().split(/\s+/)
+	  else return [ obj ]
+	}
+	
+	// ======= API ========
+	
+	/**
+	 * Create a phrase (a sequential structure of notes)
+	 *
+	 * @param {String|Array} pitches - the phrase note pitches
+	 * @param {String|Array} durations - the phrase note durations
+	 * @param {Hash} attributes - the phrase note attributes
+	 * @return {Array} a sequential musical structure
+	 *
+	 * @example
+	 * score.phrase('A B C D E', 1)
+	 */
+	function phrase (p, d, a) { return score.seq(notes(p, d, a)) }
+	
+	/**
+	 * Create a collection of simultaneus notes
+	 *
+	 * You can specify a collection of pitches, durations and attributes
+	 * and `chord` will arrange them as a collection of notes in simultaneus
+	 * layout
+	 *
+	 * @param {String|Array} pitches - the chord note pitches
+	 * @param {String|Array} durations - the chord note durations
+	 * @param {Hash} attributes - the chord note attributes
+	 * @return {Array} a parallel musical structure
+	 *
+	 * @example
+	 * score.phrase('A B C D E', 1)
+	 */
+	function chord (p, d, a) { return score.sim(notes(p, d, a)) }
+	
+	/**
+	 * Transpose notes
+	 *
+	 * @param {String} interval - the interval to transpose
+	 * @param {Object} score - the score object
+	 * @return {Score} the score with the notes transposed
+	 */
+	var trans = score.map(function (note, interval) {
+	  return note.pitch
+	    ? score.el(note, { pitch: tr(interval, note.pitch) }) : note
+	})
+	
+	module.exports = { phrase: phrase, chord: chord, trans: trans }
+
+
+/***/ },
+/* 313 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var parse = __webpack_require__(314)
+	var str = __webpack_require__(321)
+	var operation = __webpack_require__(326)(parse, str)
+	
+	/**
+	 * Transposes a note by an interval.
+	 *
+	 * Given a note and an interval it returns the transposed note. It can be used
+	 * to add intervals if both parameters are intervals.
+	 *
+	 * The order of the parameters is indifferent.
+	 *
+	 * This function is currified so it can be used to map arrays of notes.
+	 *
+	 * @name transpose
+	 * @function
+	 * @param {String|Array} interval - the interval. If its false, the note is not
+	 * transposed.
+	 * @param {String|Array} note - the note to transpose
+	 * @return {String|Array} the note transposed
+	 *
+	 * @example
+	 * var transpose = require('note-transposer')
+	 * transpose('3m', 'C4') // => 'Eb4'
+	 * transpose('C4', '3m') // => 'Eb4'
+	 * tranpose([1, 0, 2], [3, -1, 0]) // => [3, 0, 2]
+	 * ['C', 'D', 'E'].map(transpose('3M')) // => ['E', 'F#', 'G#']
+	 */
+	var transpose = operation(function (i, n) {
+	  if (i === false) return n
+	  else if (!Array.isArray(i) || !Array.isArray(n)) return null
+	  else if (i.length === 1 || n.length === 1) return [n[0] + i[0]]
+	  var d = i.length === 2 && n.length === 2 ? null : n[2] || i[2]
+	  return [n[0] + i[0], n[1] + i[1], d]
+	})
+	
+	if (typeof module === 'object' && module.exports) module.exports = transpose
+	if (typeof window !== 'undefined') window.transpose = transpose
+
+
+/***/ },
+/* 314 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var note = __webpack_require__(315)
+	var interval = __webpack_require__(318)
+	
+	/**
+	 * Convert a note or interval string to a [pitch in coord notation]()
+	 *
+	 * @name pitch.parse
+	 * @function
+	 * @param {String} pitch - the note or interval to parse
+	 * @return {Array} the pitch in array notation
+	 *
+	 * @example
+	 * var parse = require('music-notation/pitch/parse')
+	 * parse('C2') // => [0, 2, null]
+	 * parse('5P') // => [1, 0]
+	 */
+	module.exports = function (n) { return note(n) || interval(n) }
+
+
+/***/ },
+/* 315 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var memoize = __webpack_require__(316)
+	var R = __webpack_require__(317)
+	var BASES = { C: [0, 0], D: [2, -1], E: [4, -2], F: [-1, 1], G: [1, 0], A: [3, -1], B: [5, -2] }
+	
+	/**
+	 * Get a pitch in [array notation]()
+	 * from a string in [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation)
+	 *
+	 * The string to parse must be in the form of: `letter[accidentals][octave]`
+	 * The accidentals can be up to four # (sharp) or b (flat) or two x (double sharps)
+	 *
+	 * This function is cached for better performance.
+	 *
+	 * @name note.parse
+	 * @function
+	 * @param {String} str - the string to parse
+	 * @return {Array} the note in array notation or null if not valid note
+	 *
+	 * @example
+	 * var parse = require('music-notation/note/parse')
+	 * parse('C') // => [ 0 ]
+	 * parse('c#') // => [ 8 ]
+	 * parse('c##') // => [ 16 ]
+	 * parse('Cx') // => [ 16 ] (double sharp)
+	 * parse('Cb') // => [ -6 ]
+	 * parse('db') // => [ -4 ]
+	 * parse('G4') // => [ 2, 3, null ]
+	 * parse('c#3') // => [ 8, -1, null ]
+	 */
+	module.exports = memoize(function (str) {
+	  var m = R.exec(str)
+	  if (!m || m[5]) return null
+	
+	  var base = BASES[m[1].toUpperCase()]
+	  var alt = m[2].replace(/x/g, '##').length
+	  if (m[2][0] === 'b') alt *= -1
+	  var fifths = base[0] + 7 * alt
+	  if (!m[3]) return [fifths]
+	  var oct = +m[3] + base[1] - 4 * alt
+	  var dur = m[4] ? +(m[4].substring(1)) : null
+	  return [fifths, oct, dur]
+	})
+
+
+/***/ },
+/* 316 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	/**
+	 * A simple and fast memoization function
+	 *
+	 * It helps creating functions that convert from string to pitch in array format.
+	 * Basically it does two things:
+	 * - ensure the function only receives strings
+	 * - memoize the result
+	 *
+	 * @name memoize
+	 * @function
+	 * @private
+	 */
+	module.exports = function (fn) {
+	  var cache = {}
+	  return function (str) {
+	    if (typeof str !== 'string') return null
+	    return (str in cache) ? cache[str] : cache[str] = fn(str)
+	  }
+	}
+
+
+/***/ },
+/* 317 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	/**
+	 * A regex for matching note strings in scientific notation.
+	 *
+	 * The note string should have the form `letter[accidentals][octave][/duration]`
+	 * where:
+	 *
+	 * - letter: (Required) is a letter from A to G either upper or lower case
+	 * - accidentals: (Optional) can be one or more `b` (flats), `#` (sharps) or `x` (double sharps).
+	 * They can NOT be mixed.
+	 * - octave: (Optional) a positive or negative integer
+	 * - duration: (Optional) anything follows a slash `/` is considered to be the duration
+	 * - element: (Optional) additionally anything after the duration is considered to
+	 * be the element name (for example: 'C2 dorian')
+	 *
+	 * @name note.regex
+	 * @example
+	 * var R = require('music-notation/note/regex')
+	 * R.exec('c#4') // => ['c#4', 'c', '#', '4', '', '']
+	 */
+	module.exports = /^([a-gA-G])(#{1,}|b{1,}|x{1,}|)(-?\d*)(\/\d+|)\s*(.*)\s*$/
+
+
+/***/ },
+/* 318 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var memoize = __webpack_require__(316)
+	var fromProps = __webpack_require__(319)
+	var INTERVAL = __webpack_require__(320)
+	var TYPES = 'PMMPPMM'
+	var QALT = {
+	  P: { dddd: -4, ddd: -3, dd: -2, d: -1, P: 0, A: 1, AA: 2, AAA: 3, AAAA: 4 },
+	  M: { ddd: -4, dd: -3, d: -2, m: -1, M: 0, A: 1, AA: 2, AAA: 3, AAAA: 4 }
+	}
+	
+	/**
+	 * Parse a [interval shorthand notation](https://en.wikipedia.org/wiki/Interval_(music)#Shorthand_notation)
+	 * to [interval coord notation](https://github.com/danigb/music.array.notation)
+	 *
+	 * This function is cached for better performance.
+	 *
+	 * @name interval.parse
+	 * @function
+	 * @param {String} interval - the interval string
+	 * @return {Array} the interval in array notation or null if not a valid interval
+	 *
+	 * @example
+	 * var parse = require('music-notation/interval/parse')
+	 * parse('3m') // => [2, -1, 0]
+	 * parse('9b') // => [1, -1, 1]
+	 * parse('-2M') // => [6, -1, -1]
+	 */
+	module.exports = memoize(function (str) {
+	  var m = INTERVAL.exec(str)
+	  if (!m) return null
+	  var dir = (m[2] || m[7]) === '-' ? -1 : 1
+	  var num = +(m[3] || m[8]) - 1
+	  var q = m[4] || m[6] || ''
+	
+	  var simple = num % 7
+	
+	  var alt
+	  if (q === '') alt = 0
+	  else if (q[0] === '#') alt = q.length
+	  else if (q[0] === 'b') alt = -q.length
+	  else {
+	    alt = QALT[TYPES[simple]][q]
+	    if (typeof alt === 'undefined') return null
+	  }
+	  var oct = Math.floor(num / 7)
+	  var arr = fromProps(simple, alt, oct)
+	  return dir === 1 ? arr : [-arr[0], -arr[1]]
+	})
+
+
+/***/ },
+/* 319 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	// map from pitch number to number of fifths and octaves
+	var BASES = [ [0, 0], [2, -1], [4, -2], [-1, 1], [1, 0], [3, -1], [5, -2] ]
+	
+	/**
+	 * Get a pitch in [array notation]() from pitch properties
+	 *
+	 * @name array.fromProps
+	 * @function
+	 * @param {Integer} step - the step index
+	 * @param {Integer} alterations - (Optional) the alterations number
+	 * @param {Integer} octave - (Optional) the octave
+	 * @param {Integer} duration - (Optional) duration
+	 * @return {Array} the pitch in array format
+	 *
+	 * @example
+	 * var fromProps = require('music-notation/array/from-props')
+	 * fromProps([0, 1, 4, 0])
+	 */
+	module.exports = function (step, alt, oct, dur) {
+	  var base = BASES[step]
+	  alt = alt || 0
+	  var f = base[0] + 7 * alt
+	  if (typeof oct === 'undefined') return [f]
+	  var o = oct + base[1] - 4 * alt
+	  if (typeof dur === 'undefined') return [f, o]
+	  else return [f, o, dur]
+	}
+
+
+/***/ },
+/* 320 */
+/***/ function(module, exports) {
+
+	
+	// shorthand tonal notation (with quality after number)
+	var TONAL = '([-+]?)(\\d+)(d{1,4}|m|M|P|A{1,4}|b{1,4}|#{1,4}|)'
+	// strict shorthand notation (with quality before number)
+	var STRICT = '(AA|A|P|M|m|d|dd)([-+]?)(\\d+)'
+	var COMPOSE = '(?:(' + TONAL + ')|(' + STRICT + '))'
+	
+	/**
+	 * A regex for parse intervals in shorthand notation
+	 *
+	 * Three different shorthand notations are supported:
+	 *
+	 * - default [direction][number][quality]: the preferred style `3M`, `-5A`
+	 * - strict: [quality][direction][number], for example: `M3`, `A-5`
+	 * - altered: [direction][number][alterations]: `3`, `-5#`
+	 *
+	 * @name interval.regex
+	 */
+	module.exports = new RegExp('^' + COMPOSE + '$')
+
+
+/***/ },
+/* 321 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var note = __webpack_require__(322)
+	var interval = __webpack_require__(325)
+	
+	/**
+	 * Convert a pitch in coordinate notation to string. It deals with notes, pitch
+	 * classes and intervals.
+	 *
+	 * @name pitch.str
+	 * @funistron
+	 * @param {Array} pitch - the pitch in array notation
+	 * @return {String} the pitch string
+	 *
+	 * @example
+	 * var str = require('music-notation/pitch.str')
+	 * // pitch class
+	 * str([0]) // => 'C'
+	 * // interval
+	 * str([0, 0]) // => '1P'
+	 * // note
+	 * str([0, 2, 4]) // => 'C2/4'
+	 */
+	module.exports = function (n) { return note(n) || interval(n) }
+
+
+/***/ },
+/* 322 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var props = __webpack_require__(323)
+	var acc = __webpack_require__(324)
+	var cache = {}
+	
+	/**
+	 * Get [scientific pitch notation](https://en.wikipedia.org/wiki/Scientific_pitch_notation) string
+	 * from pitch in [array notation]()
+	 *
+	 * Array length must be 1 or 3 (see array notation documentation)
+	 *
+	 * The returned string format is `letter[+ accidentals][+ octave][/duration]` where the letter
+	 * is always uppercase, and the accidentals, octave and duration are optional.
+	 *
+	 * This function is memoized for better perfomance.
+	 *
+	 * @name note.str
+	 * @function
+	 * @param {Array} arr - the note in array notation
+	 * @return {String} the note in scientific notation or null if not valid note array
+	 *
+	 * @example
+	 * var str = require('music-notation/note/str')
+	 * str([0]) // => 'F'
+	 * str([0, 4]) // => null (its an interval)
+	 * str([0, 4, null]) // => 'F4'
+	 * str([0, 4, 2]) // => 'F4/2'
+	 */
+	module.exports = function (arr) {
+	  if (!Array.isArray(arr) || arr.length < 1 || arr.length === 2) return null
+	  var str = '|' + arr[0] + '|' + arr[1] + '|' + arr[2]
+	  return str in cache ? cache[str] : cache[str] = build(arr)
+	}
+	
+	var LETTER = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+	function build (coord) {
+	  var p = props(coord)
+	  return LETTER[p[0]] + acc(p[1]) + (p[2] !== null ? p[2] : '') + (p[3] !== null ? '/' + p[3] : '')
+	}
+
+
+/***/ },
+/* 323 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	// Map from number of fifths to interval number (0-index) and octave
+	// -1 = fourth, 0 = unison, 1 = fifth, 2 = second, 3 = sixth...
+	var BASES = [[3, 1], [0, 0], [4, 0], [1, -1], [5, -1], [2, -2], [6, -2], [3, -3]]
+	
+	/**
+	 * Get properties from a pitch in array format
+	 *
+	 * The properties is an array with the form [number, alteration, octave, duration]
+	 *
+	 * @name array.toProps
+	 * @function
+	 * @param {Array} array - the pitch in coord format
+	 * @return {Array} the pitch in property format
+	 *
+	 * @example
+	 * var toProps = require('music-notation/array/to-props')
+	 * toProps([2, 1, 4]) // => [1, 2, 4]
+	 */
+	module.exports = function (arr) {
+	  if (!Array.isArray(arr)) return null
+	  var index = (arr[0] + 1) % 7
+	  if (index < 0) index = 7 + index
+	  var base = BASES[index]
+	  var alter = Math.floor((arr[0] + 1) / 7)
+	  var oct = arr.length === 1 ? null : arr[1] - base[1] + alter * 4
+	  var dur = arr[2] || null
+	  return [base[0], alter, oct, dur]
+	}
+
+
+/***/ },
+/* 324 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	/**
+	 * Build an accidentals string from alteration number
+	 *
+	 * @name accidentals.str
+	 * @param {Integer} alteration - the alteration number
+	 * @return {String} the accidentals string
+	 *
+	 * @example
+	 * var accidentals = require('music-notation/accidentals/str')
+	 * accidentals(0) // => ''
+	 * accidentals(1) // => '#'
+	 * accidentals(2) // => '##'
+	 * accidentals(-1) // => 'b'
+	 * accidentals(-2) // => 'bb'
+	 */
+	module.exports = function (num) {
+	  if (num < 0) return Array(-num + 1).join('b')
+	  else if (num > 0) return Array(num + 1).join('#')
+	  else return ''
+	}
+
+
+/***/ },
+/* 325 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var props = __webpack_require__(323)
+	var cache = {}
+	
+	/**
+	 * Get a string with a [shorthand interval notation](https://en.wikipedia.org/wiki/Interval_(music)#Shorthand_notation)
+	 * from interval in [array notation](https://github.com/danigb/music.array.notation)
+	 *
+	 * The returned string has the form: `number + quality` where number is the interval number
+	 * (positive integer for ascending intervals, negative integer for descending intervals, never 0)
+	 * and the quality is one of: 'M', 'm', 'P', 'd', 'A' (major, minor, perfect, dimished, augmented)
+	 *
+	 * @name interval.str
+	 * @function
+	 * @param {Array} interval - the interval in array notation
+	 * @return {String} the interval string in shorthand notation or null if not valid interval
+	 *
+	 * @example
+	 * var str = require('music-notation/interval/str')
+	 * str([1, 0, 0]) // => '2M'
+	 * str([1, 0, 1]) // => '9M'
+	 */
+	module.exports = function (arr) {
+	  if (!Array.isArray(arr) || arr.length !== 2) return null
+	  var str = '|' + arr[0] + '|' + arr[1]
+	  return str in cache ? cache[str] : cache[str] = build(arr)
+	}
+	
+	var ALTER = {
+	  P: ['dddd', 'ddd', 'dd', 'd', 'P', 'A', 'AA', 'AAA', 'AAAA'],
+	  M: ['ddd', 'dd', 'd', 'm', 'M', 'A', 'AA', 'AAA', 'AAAA']
+	}
+	var TYPES = 'PMMPPMM'
+	
+	function build (coord) {
+	  var p = props(coord)
+	  var t = TYPES[p[0]]
+	
+	  var dir, num, alt
+	  // if its descening, invert number
+	  if (p[2] < 0) {
+	    dir = -1
+	    num = (8 - p[0]) - 7 * (p[2] + 1)
+	    alt = t === 'P' ? -p[1] : -(p[1] + 1)
+	  } else {
+	    dir = 1
+	    num = p[0] + 1 + 7 * p[2]
+	    alt = p[1]
+	  }
+	  var q = ALTER[t][4 + alt]
+	  return dir * num + q
+	}
+
+
+/***/ },
+/* 326 */
+/***/ function(module, exports) {
+
+	'use strict'
+	
+	function curry (fn, arity) {
+	  if (arity === 1) return fn
+	  return function (a, b) {
+	    if (arguments.length === 1) return function (c) { return fn(a, c) }
+	    return fn(a, b)
+	  }
+	}
+	
+	/**
+	 * Decorate a function to work with intervals, notes or pitches in
+	 * [array notation](https://github.com/danigb/tonal/tree/next/packages/music-notation)
+	 * with independence of string representations.
+	 *
+	 * This is the base of the pluggable notation system of
+	 * [tonal](https://github.com/danigb/tonal)
+	 *
+	 * @name operation
+	 * @function
+	 * @param {Function} parse - the parser
+	 * @param {Function} str - the string builder
+	 * @param {Function} fn - the operation to decorate
+	 *
+	 * @example
+	 * var parse = require('music-notation/interval/parse')
+	 * var str = require('music-notation/interval/str')
+	 * var operation = require('music-notation/operation')(parse, str)
+	 * var add = operation(function(a, b) { return [a[0] + b[0], a[1] + b[1]] })
+	 * add('3m', '3M') // => '5P'
+	 */
+	module.exports = function op (parse, str, fn) {
+	  if (arguments.length === 2) return function (f) { return op(parse, str, f) }
+	  return curry(function (a, b) {
+	    var ac = parse(a)
+	    var bc = parse(b)
+	    if (!ac && !bc) return fn(a, b)
+	    var v = fn(ac || a, bc || b)
+	    return str(v) || v
+	  }, fn.length)
+	}
+
+
+/***/ },
+/* 327 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module stats */
+	var score = __webpack_require__(311)
+	
+	function dur (obj) { return obj.duration }
+	function one () { return 1 }
+	function arrayMax (arr) { return Math.max.apply(null, arr) }
+	function arrayAdd (arr) { return arr.reduce(function (a, b) { return a + b }) }
+	
+	/**
+	 * Get the total duration of a score
+	 * @function
+	 */
+	var duration = score.transform(dur, arrayAdd, arrayMax, null)
+	
+	/**
+	 * Get the longest element duration of a score
+	 * @function
+	 */
+	var longest = score.transform(dur, arrayMax, arrayMax, null)
+	
+	/**
+	 * Return the number of elements of a score
+	 */
+	var count = score.transform(one, arrayAdd, arrayAdd, null)
+	
+	module.exports = { duration: duration, longest: longest, count: count }
+
+
+/***/ },
+/* 328 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module timed */
+	var score = __webpack_require__(311)
+	
+	/**
+	* Get all notes for side-effects
+	*
+	* __Important:__ ascending time ordered is not guaranteed
+	*
+	* @param {Function} fn - the function
+	* @param {Object} ctx - (Optional) a context object passed to the function
+	* @param {Score} score - the score object
+	*/
+	function forEachTime (fn, ctx, obj) {
+	  if (arguments.length > 1) return forEachTime(fn)(ctx, obj)
+	
+	  return function (ctx, obj) {
+	    return score.transform(
+	      function (note) {
+	        return function (time, ctx) {
+	          fn(time, note, ctx)
+	          return note.duration
+	        }
+	      },
+	      function (seq) {
+	        return function (time, ctx) {
+	          return seq.reduce(function (dur, fn) {
+	            return dur + fn(time + dur, ctx)
+	          }, 0)
+	        }
+	      },
+	      function (par) {
+	        return function (time, ctx) {
+	          return par.reduce(function (max, fn) {
+	            return Math.max(max, fn(time, ctx))
+	          }, 0)
+	        }
+	      }
+	    )(null, obj)(0, ctx)
+	  }
+	}
+	
+	/**
+	 * Get a sorted events array from a score
+	 *
+	 */
+	function events (obj, build, compare) {
+	  var e = []
+	  forEachTime(function (time, obj) {
+	    e.push(build ? build(time, obj) : [time, obj])
+	  }, null, obj)
+	  return e.sort(compare || function (a, b) { return a[0] - b[0] })
+	}
+	
+	module.exports = { forEachTime: forEachTime, events: events }
+
+
+/***/ },
+/* 329 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module rhythm */
+	
+	var score = __webpack_require__(311)
+	
+	var rhythm = {}
+	
+	/**
+	 * Create a rhythmic sequence from a pattern
+	 */
+	rhythm.pattern = function (pattern, duration) {
+	  var arr = pattern.split('')
+	  var dur = duration ? duration / arr.length : 1
+	  return score.seq(arr.map(score.note(dur)))
+	}
+	
+	/**
+	 * Create a rhythmic sequence from an inter onset interval number
+	 */
+	rhythm.ioi = function (ioi) {
+	  return rhythm.pattern(rhythm.ioiToPattern(ioi))
+	}
+	
+	/**
+	 * Convert an [inter onset interval](https://en.wikipedia.org/wiki/Time_point#Interonset_interval)
+	 * to a pattern
+	 *
+	 * @param {String} ioi - the inter onset interval
+	 * @param {String} the rhythm pattern
+	 */
+	rhythm.ioiToPattern = function (num) {
+	  return num.split('').map(function (n) {
+	    return 'x' + Array(+n).join('.')
+	  }).join('')
+	}
+	
+	/**
+	 * Convert a pattern string to inter onset interval string
+	 *
+	 * @param {String} pattern - the pattern to be converted
+	 * @return {String} the inter onset interval
+	 */
+	rhythm.patternToIoi = function (pattern) {
+	  return pattern.split(/x/)
+	    .map(function (d) { return d.length })
+	    .filter(function (_, i) { return i }) // remove first
+	    .map(function (d) { return d + 1 })
+	    .join('')
+	}
+	
+	module.exports = rhythm
+
+
+/***/ },
+/* 330 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module measures */
+	
+	var score = __webpack_require__(311)
+	
+	/**
+	 * Parse masures using a time meter to get a sequence
+	 *
+	 * @param {String} meter - the time meter
+	 * @param {String} measures - the measures string
+	 * @param {Function} builder - (Optional) the function used to build the notes
+	 * @return {Score} the score object
+	 *
+	 * @example
+	 * measures('4/4', 'c d (e f) | g | (a b c) d')
+	 */
+	function measures (meter, measures, builder) {
+	  var list
+	  var mLen = measureLength(meter)
+	  if (!mLen) throw Error('Not valid meter: ' + meter)
+	
+	  var seq = []
+	  builder = builder || score.note
+	  splitMeasures(measures).forEach(function (measure) {
+	    measure = measure.trim()
+	    if (measure.length > 0) {
+	      list = parenthesize(tokenize(measure), [])
+	      processList(seq, list, measureLength(meter), builder)
+	    }
+	  })
+	  return score.seq(seq)
+	}
+	
+	// get the length of one measure
+	function measureLength (meter) {
+	  var m = meter.split('/').map(function (n) {
+	    return +n.trim()
+	  })
+	  return m[0] * (4 / m[1])
+	}
+	
+	function processList (seq, list, total, builder) {
+	  var dur = total / list.length
+	  list.forEach(function (i) {
+	    if (Array.isArray(i)) processList(seq, i, dur, builder)
+	    else seq.push(builder(dur, i))
+	  })
+	}
+	
+	function splitMeasures (repr) {
+	  return repr
+	    .replace(/\s+\||\|\s+/, '|') // spaces between |
+	    .replace(/^\||\|\s*$/g, '') // first and last |
+	    .split('|')
+	}
+	
+	/*
+	 * The following code is copied from https://github.com/maryrosecook/littlelisp
+	 * See: http://maryrosecook.com/blog/post/little-lisp-interpreter
+	 * Thanks Mary Rose Cook!
+	 */
+	var parenthesize = function (input, list) {
+	  var token = input.shift()
+	  if (token === undefined) {
+	    return list
+	  } else if (token === '(') {
+	    list.push(parenthesize(input, []))
+	    return parenthesize(input, list)
+	  } else if (token === ')') {
+	    return list
+	  } else {
+	    return parenthesize(input, list.concat(token))
+	  }
+	}
+	
+	var tokenize = function (input) {
+	  return input
+	    .replace(/[\(]/g, ' ( ')
+	    .replace(/[\)]/g, ' ) ')
+	    .replace(/\,/g, ' ')
+	    .trim().split(/\s+/)
+	}
+	
+	module.exports = { measures: measures, melody: measures }
+
+
+/***/ },
+/* 331 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module harmony */
+	
+	var score = __webpack_require__(311)
+	var measures = __webpack_require__(330).measures
+	var getChord = __webpack_require__(332)
+	
+	/**
+	 * Create a chord names sequence
+	 *
+	 * @param {String} meter - the meter used in the measures
+	 * @param {String} measures - the chords
+	 * @param {Sequence} a sequence of chords
+	 *
+	 * @example
+	 * score.chords('4/4', 'C6 | Dm7 G7 | Cmaj7')
+	 *
+	 * @example
+	 * score(['chords', '4/4', 'Cmaj7 | Dm7 G7'])
+	 */
+	function chords (meter, data) {
+	  return measures(meter, data, function (dur, el) {
+	    return score.el({ duration: dur, chord: el })
+	  })
+	}
+	
+	/**
+	 * Convert a chord names sequence into a chord notes sequence
+	 */
+	var expandChords = score.map(function (el) {
+	  var toNote = score.note(el.duration)
+	  var setOct = function (pc) { return pc + 4 }
+	  return el.chord
+	    ? score.sim(getChord(el.chord).map(setOct).map(toNote)) : el
+	}, null)
+	
+	/**
+	 * Create a harmony sequence
+	 */
+	function harmony (meter, data) {
+	  return expandChords(chords(meter, data))
+	}
+	
+	module.exports = { chords: chords, expandChords: expandChords, harmony: harmony }
+
+
+/***/ },
+/* 332 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var chords = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./chords.json\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()))
+	var dictionary = __webpack_require__(334)
+	
+	/**
+	 * A chord dictionary. Get chord data from a chord name.
+	 *
+	 * @name chord
+	 * @function
+	 * @param {String} name - the chord name
+	 * @see music-dictionary
+	 *
+	 * @example
+	 * // get chord data
+	 * var chord = require('chord-dictionary')
+	 * chord('Maj7') // => { name: 'Maj7', aliases: ['M7', 'maj7']
+	 *                //      intervals:  [ ...],
+	 *                //      binary: '100010010001', decimal: 2193 }
+	 *
+	 * @example
+	 * // get it from aliases, binary or decimal numbers
+	 * chord('Maj7') === chord('M7') === chord('100010010001') === chord(2913)
+	 *
+	 * @example
+	 * // get chord names
+	 * chord.names // => ['Maj7', 'm7', ...]
+	 */
+	module.exports = dictionary(chords)
+
+
+/***/ },
+/* 333 */,
+/* 334 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var parse = __webpack_require__(318)
+	var R = __webpack_require__(317)
+	var transpose = __webpack_require__(313)
+	
+	/**
+	 * Create a musical dictionary. A musical dictionary is a function that given
+	 * a name (and optionally a tonic) returns an array of notes.
+	 *
+	 * A dictionary is created from a HashMap. It maps a name to a string with
+	 * an interval list and, optionally, an alternative name list (see example)
+	 *
+	 * Additionally, the dictionary has properties (see examples):
+	 *
+	 * - data: a hash with the dictionary data
+	 * - names: an array with all the names
+	 * - aliases: an array with all the names including aliases
+	 * - source: the source of the dictionary
+	 *
+	 * Each value of the data hash have the following properties:
+	 *
+	 * - name: the name
+	 * - aliases: an array with the alternative names
+	 * - intervals: an array with the intervals
+	 * - steps: an array with the intervals in __array notation__
+	 * - binary: a binary representation of the set
+	 * - decimal: the decimal representation of the set
+	 *
+	 * @name dictionary
+	 * @function
+	 * @param {Hash} source - the dictionary source
+	 * @return {Function} the dictionary
+	 *
+	 * @example
+	 * var dictionary = require('music-dictionary')
+	 * var chords = dictionary({'Maj7': ['1 3 5 7', ['M7']], 'm7': ['1 3b 5 7b'] })
+	 * chords('CMaj7') // => ['C', 'E', 'G', 'B']
+	 * chords('DM7') // => ['D', 'F#', 'A', 'C#']
+	 * chords('Bm7') // => ['B', 'D', 'F#', 'A']
+	 *
+	 * @example
+	 * // dictionary data
+	 * chords.data['M7'] // => { name: 'Maj7', aliases: ['M7'],
+	 *                   //      intervals: ['1', '3', '5', '7'], steps: [ ...],
+	 *                   //      binary: '10010010001', decimal: 2193 }
+	 *
+	 * // get chord by binary numbers
+	 * chords.data['100010010001'] === chords.data['Maj7']
+	 * chords.data[2193] === chords.data['Maj7']
+	 *
+	 * @example
+	 * // available names
+	 * chords.names // => ['Maj7', 'm7']
+	 * chords.aliases // => ['Maj7', 'm7', 'M7']
+	 */
+	module.exports = function (src) {
+	  function dict (name, tonic) {
+	    var v = dict.props(name)
+	    if (!v) {
+	      var n = R.exec(name)
+	      v = n ? dict.props(n[5]) : null
+	      if (!v) return []
+	      tonic = tonic === false ? tonic : tonic || n[1] + n[2] + n[3]
+	    }
+	    if (tonic !== false && !tonic) return function (t) { return dict(name, t) }
+	    return v.intervals.map(transpose(tonic))
+	  }
+	  return build(src, dict)
+	}
+	
+	function build (src, dict) {
+	  var data = {}
+	  var names = Object.keys(src)
+	  var aliases = names.slice()
+	
+	  dict.props = function (name) { return data[name] }
+	  dict.names = function (a) { return (a ? aliases : names).slice() }
+	
+	  names.forEach(function (k) {
+	    var d = src[k]
+	    var c = { name: k, aliases: d[1] || [] }
+	    c.intervals = d[0].split(' ')
+	    c.steps = c.intervals.map(parse)
+	    c.binary = binary([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], c.steps)
+	    c.decimal = parseInt(c.binary, 2)
+	    data[k] = data[c.binary] = data[c.decimal] = c
+	    c.aliases.forEach(function (a) { data[a] = c })
+	    if (c.aliases.length > 0) aliases = aliases.concat(c.aliases)
+	  })
+	  return dict
+	}
+	
+	function binary (num, intervals) {
+	  intervals.forEach(function (i) { num[(i[0] * 7 + i[1] * 12) % 12] = '1' })
+	  return num.join('')
+	}
+
+
+/***/ },
+/* 335 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @module performance */
+	
+	var score = __webpack_require__(311)
+	
+	var inst = score.map(function (note, name) {
+	  return score.el(note, { inst: name })
+	})
+	
+	var tempo = score.map(function (note, tempo) {
+	  var c = 60 / tempo
+	  return score.el(note, { duration: c * note.duration })
+	})
+	
+	var vel = score.map(function (note, vel) {
+	  return score.el(note, { velocity: vel })
+	})
+	
+	module.exports = { inst: inst, tempo: tempo, vel: vel }
+
+
+/***/ },
+/* 336 */
+/***/ function(module, exports) {
+
+	/** @module build */
+	
+	function build (scope, data) {
+	  if (arguments.length > 1) return build(scope)(data)
+	
+	  return function (data) {
+	    var ctx = {}
+	    ctx.score = exec(ctx, scope, data)
+	    return ctx
+	  }
+	}
+	
+	// exec a data array
+	function exec (ctx, scope, data) {
+	  var fn = getFunction(ctx, scope, data[0])
+	  var elements = data.slice(1)
+	  var params = elements.map(function (p) {
+	    return Array.isArray(p) ? exec(ctx, scope, p)
+	      : (p[0] === '$') ? ctx[p] : p
+	  }).filter(function (p) { return p !== VAR })
+	  return fn.apply(null, params)
+	}
+	
+	function getFunction (ctx, scope, name) {
+	  if (typeof name === 'function') return name
+	  else if (typeof name !== 'string') throw Error('Not a valid function: ' + name)
+	  else if (name[0] === '$') return variableFn(ctx, name)
+	  else if (!scope[name]) throw Error('Command not found: ' + name)
+	  else return scope[name]
+	}
+	
+	var VAR = { type: 'var' }
+	function variableFn (ctx, name) {
+	  return function (obj) {
+	    ctx[name] = obj
+	    return VAR
+	  }
+	}
+	
+	module.exports = { build: build }
+
+
+/***/ },
+/* 337 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var timed = __webpack_require__(328)
+	var scheduler = __webpack_require__(338)
+	var toMidi = __webpack_require__(339)
+	var toFreq = __webpack_require__(340)
+	
+	function play (ac, player, obj) {
+	  var e = timed.events(obj)
+	  scheduler.schedule(ac, 0, e, function (time, note) {
+	    console.log(time, note)
+	    var freq = toFreq(440, toMidi(note.pitch))
+	    if (freq) player(ac, freq, time, note.duration, note.velocity)
+	  })
+	}
+	
+	function synth (ac, freq, when, dur, vel) {
+	  console.log('synth', freq, when, dur, vel)
+	  var osc = ac.createOscillator()
+	  var gain = ac.createGain()
+	  osc.connect(gain)
+	  gain.connect(ac.destination)
+	
+	  gain.gain.value = (vel || 80) / 100
+	  osc.type = 'square'
+	  osc.frequency.value = freq || 440
+	  osc.start(when || 0)
+	  osc.stop(when + (dur || 0.5))
+	}
+	
+	module.exports = { play: play, synth: synth }
+
+
+/***/ },
+/* 338 */
+/***/ function(module, exports) {
+
+	
+	var DEFAULTS = {
+	  // time in milliseconds of the scheduler lookahead
+	  lookahead: 500,
+	  overlap: 250
+	}
+	
+	/**
+	 *
+	 */
+	function schedule (ac, time, events, fn, options) {
+	  console.log(events)
+	  time = Math.max(time, ac.currentTime)
+	  var opts = DEFAULTS
+	  var id = null
+	  var nextEvtNdx = 0
+	
+	  function scheduleEvents () {
+	    var current = ac.currentTime
+	    var from = current - time
+	    var to = current + (opts.lookahead + opts.overlap) / 1000
+	    console.log('scheduling', from, to)
+	    var next = events[nextEvtNdx]
+	    while (next && next[0] >= from && next[0] < to) {
+	      fn(time + next[0], next[1])
+	      console.log('event', next, current, time, time + next[0])
+	      nextEvtNdx++
+	      next = events[nextEvtNdx]
+	    }
+	    if (next) id = setTimeout(scheduleEvents, opts.lookahead)
+	  }
+	  scheduleEvents()
+	
+	  return {
+	    stop: function () {
+	      clearTimeout(id)
+	    }
+	  }
+	}
+	
+	module.exports = { schedule: schedule }
+
+
+/***/ },
+/* 339 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+	
+	var parse = __webpack_require__(315)
+	
+	/**
+	 * Get the midi number of a note
+	 *
+	 * If the argument passed to this function is a valid midi number, it returns it
+	 *
+	 * The note can be an string in scientific notation or
+	 * [array pitch notation](https://github.com/danigb/music.array.notation)
+	 *
+	 * @name midi
+	 * @function
+	 * @param {String|Array|Integer} note - the note in string or array notation.
+	 * If the parameter is a valid midi number it return it as it.
+	 * @return {Integer} the midi number
+	 *
+	 * @example
+	 * var midi = require('note-midi')
+	 * midi('A4') // => 69
+	 * midi('a3') // => 57
+	 * midi([0, 2]) // => 36 (C2 in array notation)
+	 * midi(60) // => 60
+	 * midi('C') // => null (pitch classes don't have midi number)
+	 */
+	function midi (note) {
+	  if ((typeof note === 'number' || typeof note === 'string') &&
+	    note > 0 && note < 128) return +note
+	  var p = Array.isArray(note) ? note : parse(note)
+	  if (!p || p.length < 2) return null
+	  return p[0] * 7 + p[1] * 12 + 12
+	}
+	
+	if (typeof module === 'object' && module.exports) module.exports = midi
+	if (typeof window !== 'undefined') window.midi = midi
+
+
+/***/ },
+/* 340 */
+/***/ function(module, exports) {
+
+	/**
+	 * Get the pitch frequency in herzs (with custom concert tuning) from a midi number
+	 *
+	 * This function is currified so it can be partially applied (see examples)
+	 *
+	 * @param {Float} tuning - the frequency of A4 (null means 440)
+	 * @param {Integer} midi - the midi number
+	 * @return {Float} the frequency of the note
+	 *
+	 * @example
+	 * // 69 midi is A4
+	 * freq(null, 69) // => 440
+	 * freq(444, 69) // => 444
+	 *
+	 * @example
+	 * // partially applied
+	 * var freq = require('midi-freq')(440)
+	 * freq(69) // => 440
+	 */
+	module.exports = function freq (tuning, midi) {
+	  tuning = tuning || 440
+	  if (arguments.length > 1) return freq(tuning)(midi)
+	
+	  return function (m) {
+	    return m === 0 || (m > 0 && m < 128) ? Math.pow(2, (m - 69) / 12) * tuning : null
+	  }
+	}
+
+
+/***/ },
+/* 341 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var forEachTime = __webpack_require__(328).forEachTime
+	var toMidi = __webpack_require__(339)
+	
+	var box = {
+	  width: 300, height: 200,
+	  base: 30, time: 20, pitch: 10,
+	  x: function (time) { return time * box.time },
+	  y: function (midi) { return box.height - (midi - box.base + 1) * box.pitch },
+	  nw: function (duration) { return duration * box.time - 1 },
+	  nh: function () { return box.pitch - 1 }
+	}
+	
+	function canvas (w, h, parent) {
+	  parent = parent || document.body
+	  var canvas = document.createElement('canvas')
+	  canvas.width = w || 200
+	  canvas.height = h || 200
+	  parent.appendChild(canvas)
+	  return canvas.getContext('2d')
+	}
+	
+	function build (obj) {
+	
+	}
+	
+	/**
+	 * Draw a piano roll
+	 */
+	function draw (ctx, score) {
+	  console.log(score)
+	  drawStripes(box, ctx)
+	  forEachTime(function (time, note) {
+	    var midi = toMidi(note.pitch)
+	    console.log(time, note, midi)
+	    ctx.fillRect(box.x(time), box.y(midi), box.nw(note.duration), box.nh())
+	  }, null, score)
+	}
+	
+	var ALT = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0]
+	
+	function drawStripes (box, ctx) {
+	  var alt
+	  var num = box.height / box.pitch
+	  ctx.fillStyle = '#efefef'
+	  for (var i = 0; i < num; i++) {
+	    alt = ALT[(box.base + num - i) % 12]
+	    ctx.fillRect(0, box.y(box.base + num - i), box.width, alt ? 10 : 1)
+	  }
+	  for (var v = 0; v < box.width / box.time; v++) {
+	    ctx.fillRect(v * box.time, 0, 1, box.height)
+	  }
+	  ctx.fillStyle = '#000000'
+	}
+	
+	module.exports = { build: build, draw: draw, canvas: canvas }
+
+
+/***/ },
+/* 342 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(59);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _scorejs = __webpack_require__(310);
+	
+	var _scorejs2 = _interopRequireDefault(_scorejs);
+	
+	var _pianoroll = __webpack_require__(341);
+	
+	var _pianoroll2 = _interopRequireDefault(_pianoroll);
+	
+	var _player = __webpack_require__(337);
+	
+	var _player2 = _interopRequireDefault(_player);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	// require the library 
+	
+	// require the pianoroll module 
+	
+	// require the player module 
+	
+	
+	var Canvas = function (_React$Component) {
+		_inherits(Canvas, _React$Component);
+	
+		function Canvas(props) {
+			_classCallCheck(this, Canvas);
+	
+			return _possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, props));
+		}
+	
+		_createClass(Canvas, [{
+			key: 'render',
+			value: function render() {
+				// create the score 
+				var song = (0, _scorejs2.default)(['melody', '4/4', 'c2 d2 e2 (f2 g2) | a2 b2 | c3'], ['harmony', '4/4', 'Cmaj7 | Dm7 G7 | Cmaj7']);
+	
+				// play the score: 
+				// create an audio context 
+				var ac = new AudioContext();
+				_player2.default.play(ac, _player2.default.synth, _scorejs2.default.tempo(120, song));
+	
+				// show the score in a piano roll 
+				// given a canvas...
+				var canvas = document.getElementById('scorejs-canvas');
+				var ctx = canvas.getContext('2d');
+				_pianoroll2.default.draw(ctx, song);
+	
+				return _react2.default.createElement(
+					'div',
+					null,
+					_react2.default.createElement('canvas', { id: 'scorejs-canvas', width: '800', height: '600' })
+				);
+			}
+		}]);
+	
+		return Canvas;
+	}(_react2.default.Component);
+	
+	exports.default = Canvas;
 
 /***/ }
 /******/ ]);
