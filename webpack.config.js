@@ -1,6 +1,7 @@
 'use strict';
 
 const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
   entry: './browser/main.jsx',
@@ -8,10 +9,13 @@ module.exports = {
     path: __dirname,
     filename: './public/bundle.js'
   },
+  node: {
+    fs: 'empty'
+  },
   context: __dirname,
   devtool: 'source-map',  
   resolve: {
-    extensions: ['', '.js', '.jsx']
+    extensions: ['', '.js', '.jsx', '.json']
   },
   module: {
     loaders: [
@@ -22,7 +26,12 @@ module.exports = {
         query: {
           presets: ['react', 'es2015']
         }
-      }
+      },
+      {
+        test: /\.json$/,
+        include: path.join(__dirname, 'node_modules', 'pixi.js'),
+        loader: 'json',
+      },
     ]
   }
 };

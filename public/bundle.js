@@ -31362,11 +31362,9 @@
 	
 	var _Navbar2 = _interopRequireDefault(_Navbar);
 	
-	var _Footer = __webpack_require__(308);
-	
-	var _Footer2 = _interopRequireDefault(_Footer);
-	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	// import Footer from './Footer';
 	
 	exports.default = function (_ref) {
 	  var children = _ref.children;
@@ -31400,7 +31398,7 @@
 	    null,
 	    _react2.default.createElement(
 	      "div",
-	      { className: "nav-wrapper green darken-2" },
+	      { className: "nav-wrapper grey darken-1" },
 	      _react2.default.createElement(
 	        "a",
 	        { href: "#", className: "brand-logo" },
@@ -31442,114 +31440,7 @@
 	};
 
 /***/ },
-/* 308 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _react = __webpack_require__(59);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	exports.default = function () {
-	  return _react2.default.createElement(
-	    "footer",
-	    { className: "page-footer" },
-	    _react2.default.createElement(
-	      "div",
-	      { className: "container" },
-	      _react2.default.createElement(
-	        "div",
-	        { className: "row" },
-	        _react2.default.createElement(
-	          "div",
-	          { className: "col l6 s12" },
-	          _react2.default.createElement(
-	            "h5",
-	            { className: "white-text" },
-	            "Footer Content"
-	          ),
-	          _react2.default.createElement(
-	            "p",
-	            { className: "grey-text text-lighten-4" },
-	            "You can use rows and columns here to organize your footer content."
-	          )
-	        ),
-	        _react2.default.createElement(
-	          "div",
-	          { className: "col l4 offset-l2 s12" },
-	          _react2.default.createElement(
-	            "h5",
-	            { className: "white-text" },
-	            "Links"
-	          ),
-	          _react2.default.createElement(
-	            "ul",
-	            null,
-	            _react2.default.createElement(
-	              "li",
-	              null,
-	              _react2.default.createElement(
-	                "a",
-	                { className: "grey-text text-lighten-3", href: "#!" },
-	                "Link 1"
-	              )
-	            ),
-	            _react2.default.createElement(
-	              "li",
-	              null,
-	              _react2.default.createElement(
-	                "a",
-	                { className: "grey-text text-lighten-3", href: "#!" },
-	                "Link 2"
-	              )
-	            ),
-	            _react2.default.createElement(
-	              "li",
-	              null,
-	              _react2.default.createElement(
-	                "a",
-	                { className: "grey-text text-lighten-3", href: "#!" },
-	                "Link 3"
-	              )
-	            ),
-	            _react2.default.createElement(
-	              "li",
-	              null,
-	              _react2.default.createElement(
-	                "a",
-	                { className: "grey-text text-lighten-3", href: "#!" },
-	                "Link 4"
-	              )
-	            )
-	          )
-	        )
-	      )
-	    ),
-	    _react2.default.createElement(
-	      "div",
-	      { className: "footer-copyright" },
-	      _react2.default.createElement(
-	        "div",
-	        { className: "container" },
-	        "\xA9 2017 Copyright Evan DiGiambattista",
-	        _react2.default.createElement(
-	          "a",
-	          { className: "grey-text text-lighten-4 right", href: "#!" },
-	          "More Links"
-	        )
-	      )
-	    )
-	  );
-	};
-
-/***/ },
+/* 308 */,
 /* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -31565,19 +31456,31 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
+	// import pixiPianoRoll from 'pixi-piano-roll';
+	
+	// const pianoRoll = pixiPianoRoll({
+	//     width: 900,
+	//     height: 400,
+	//     noteColor: 0xdb000f,
+	//     gridLineColor: 0x333333,
+	//     backgroundColor: 0x1a0002,
+	//     bpm: 140,
+	//     antialias: true,
+	//     zoom: 4,
+	//     resolution: 2,
+	//     time: '0:0:0',
+	//     renderer: 'WebGLRenderer',
+	//     noteFormat: 'String'
+	// });
+	
 	exports.default = function () {
 		return _react2.default.createElement(
 			'div',
 			null,
 			_react2.default.createElement(
-				'h1',
+				'p',
 				null,
-				'HELLO.'
-			),
-			_react2.default.createElement(
-				'h3',
-				null,
-				'I am content.'
+				'content'
 			)
 		);
 	};
