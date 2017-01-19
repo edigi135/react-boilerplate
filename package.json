@@ -5,7 +5,7 @@
   "main": "/browser/main.jsx",
   "scripts": {
     "start": "webpack -w & nodemon --watch server -e js,html server/start.js",
-    "build-sass": "sass --watch app/sass:public/stylesheets"
+    "build-sass": "sass --watch browser/sass:public/stylesheets"
   },
   "author": "",
   "license": "ISC",

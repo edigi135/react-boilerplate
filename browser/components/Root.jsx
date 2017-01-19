@@ -8,5 +8,6 @@ export default ({ children }) => (
   <div id="main">
     <Navbar />
     { children }
+  {/*<Footer />*/}
   </div>
 );

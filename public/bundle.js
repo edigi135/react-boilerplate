@@ -66,7 +66,7 @@
 	
 	var _Container_Root2 = _interopRequireDefault(_Container_Root);
 	
-	var _SampleApp = __webpack_require__(309);
+	var _SampleApp = __webpack_require__(308);
 	
 	var _SampleApp2 = _interopRequireDefault(_SampleApp);
 	
@@ -31398,7 +31398,7 @@
 	    null,
 	    _react2.default.createElement(
 	      "div",
-	      { className: "nav-wrapper grey darken-1" },
+	      { className: "nav-wrapper teal" },
 	      _react2.default.createElement(
 	        "a",
 	        { href: "#", className: "brand-logo" },
@@ -31440,8 +31440,7 @@
 	};
 
 /***/ },
-/* 308 */,
-/* 309 */
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
