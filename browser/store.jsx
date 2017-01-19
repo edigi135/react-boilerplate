@@ -5,7 +5,9 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 
 import rootReducer from './redux';
 
-export default createStore(
+const store = createStore(
   rootReducer,
   composeWithDevTools(applyMiddleware(thunk, createLogger({ collapsed: true })))
 );
+
+export default store;

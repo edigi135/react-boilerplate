@@ -6,15 +6,15 @@ import { browserHistory } from 'react-router';
 
 import Root from '../components/Root';
 
-const mapStateToProps = () => {
-  return {
+const mapStateToProps = state => {
+  return state = {
     message: 'Some message'
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    myCoolFunction: console.log('oh god')
+    myCoolFunction: () => 'Hello'
   };
 };
 

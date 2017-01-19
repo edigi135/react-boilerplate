@@ -3,6 +3,6 @@
 import { combineReducers } from 'redux';
 
 // import reducers here --->
-import sampleReducer from './reducer_Sample-Reducer';
+import Tone_reducer from './Tone_reducer';
 
-export default combineReducers({ sampleReducer });
+export default combineReducers({ Tone_reducer });

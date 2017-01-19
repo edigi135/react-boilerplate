@@ -2,24 +2,14 @@
 
 import React from 'react';
 import Tone from 'tone';
+import { playNote } from '../redux/Tone_reducer';
 
 export default () => {
-	const synth = new Tone.Synth().toMaster();
-	
-	function handleClick() {
-		synth.triggerAttackRelease("C4", "8n");
-	}
-	function loopC() {
-		return new Tone.Loop(function(time){
-    synth.triggerAttackRelease("C4", "8n", time);
-}, "4n");
-	}
-	
+	// const synth = new Tone.Synth().toMaster();
 
 	return (
 		<div>
-			<button onClick={ handleClick }> Play C </button>
-			<button onClick={ loopC }> Loop C </button>
+			<button onClick={ playNote }> play C </button>
 		</div>
 	);
 };
