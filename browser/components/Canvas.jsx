@@ -5,7 +5,7 @@ import React from 'react';
 // require the library 
 import score from 'scorejs';
 // require the pianoroll module 
-import pianoRoll from 'scorejs/ext/pianoroll';
+import {  build, draw, canvas } from 'scorejs/ext/pianoroll';
 // require the player module 
 import player from 'scorejs/ext/player';
 
@@ -28,13 +28,12 @@ export default class Canvas extends React.Component {
 
 		// show the score in a piano roll 
 		// given a canvas...
-		const canvas = document.getElementById('scorejs-canvas');
 		const ctx = canvas.getContext('2d');
-		pianoRoll.draw(ctx, song);
+		draw(ctx, song);
 		
 		return (
 			<div>
-				<canvas id="scorejs-canvas" width="800" height="600"></canvas>
+				{ canvas }
 			</div>
 		);
 	}

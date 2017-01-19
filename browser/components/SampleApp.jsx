@@ -1,13 +1,13 @@
 'use strict';
 
 import React from 'react';
-import Canvas from './Canvas';
+import Tone from './Tone';
 
 export default () => {
 	return (
 		<div>
 			<p>content</p>
-			<Canvas />
+			<Tone/>
 		</div>
 	);
 };
