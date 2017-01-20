@@ -1,3 +1,5 @@
+'use strict';
+
 import Tone from 'tone';
 
 /* -----------------    CONSTANTS     ------------------ */
@@ -32,15 +34,20 @@ export default function reducer (state = initialState, action) {
 
 /* ------------       DISPATCHERS     ------------------ */
 
-const synth = new Tone.AMSynth().toMaster();
+// Set up synth and pattern
+const synth = new Tone.Synth().toMaster();
+const pattern = new Tone.Pattern(function(time, note) {
+  // synth.triggerAttackRelease(note, 0.25);
+}, ["C2", "D4", "E5", "A6"]);
 
-export const playNote = () => dispatch => {
-  synth.triggerAttack("C4");
-  dispatch(play('playing'));
+// export to container
+export const playArp = () => dispatch => {
+  console.log('Pattern:', pattern);
+  pattern();
+  dispatch(play('Arpeggio Playing'));
 };
 
-export const stopNote = () => dispatch => {
-  synth.triggerRelease();
-  dispatch(stop('stopped'));
+export const stopArp = () => dispatch => {
+  pattern();
+  dispatch(stop('Arpeggio Stopped'));
 };
-

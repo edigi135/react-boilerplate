@@ -6,15 +6,15 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { Router, Route, IndexRoute, browserHistory } from 'react-router';
 
-import Container_Root from './containers/Container_Root';
+import RootContainer from './containers/Root_container';
 // import SampleApp from './components/SampleApp';
-import Tone from './components/Tone';
+import ToneContainer from './containers/Tone_container';
 
 ReactDOM.render(
 	<Provider store={ store }>
 		<Router history={ browserHistory }>
-			<Route path="/" component={ Container_Root }>
-				<IndexRoute component={ Tone } />
+			<Route path="/" component={ RootContainer }>
+				<IndexRoute component={ ToneContainer } />
 			</Route>
 		</Router>
 	</Provider>
